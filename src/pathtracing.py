@@ -1,7 +1,48 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from math import sqrt, isnan
+from random import uniform, randint
 
+def gen_circle_points(rad_0, rad_1, rad_2, num_sets):
+        points_list = []
+
+        for i in range(num_sets):
+                x0 = uniform(0, rad_0)
+                y0 = sqrt(rad_0**2 - x0**2)
+                x1 = uniform(0, rad_1)
+                y1 = sqrt(rad_1**2 - x1**2)
+                x2 = uniform(0, rad_2)
+                y2 = sqrt(rad_2**2 - x2**2)
+
+                a  = randint(0,1)
+                if a == 1:
+                        y0 = -y0
+
+                b  = randint(0,1)
+                if b == 1:
+                        y1 = -y1
+
+                c  = randint(0,1)
+                if c==1:
+                        y2 = -y2
+
+                points = [(x0, y0), (x1, y1), (x2, y2)]
+                points_list.append(points)
+
+        return points_list
+
+def gen_points(num_sets):
+
+        points_list = []
+
+        for i in range(num_sets):
+                point_set = []
+                for i in range(6):
+                        point_set.append(uniform(-10, 10))
+                points_list.append(point_set)
+
+        return points_list
+    
 def perpline(line, offset):
     x = offset[0] + line[0]/2 #midpoint x
     y = offset[1] + line[1]/2 #midpoint y
@@ -43,29 +84,38 @@ def center(points):
     y, x = C[0], C[1]
     return x, y
 
-def plot(points, cen, r, a, b, c):
+def plot_circle(r, cx, cy, color):
+    xs = []; ys = []
+    x = -r
+    while x <= r:
+       y = sqrt(r ** 2 - x ** 2)
+       xs.append(x+cx); ys.append(y+cy);
+       x += 0.1
+    plt.plot(xs, ys, color=color)
+    ys = [2*cy - y for y in ys]
+    plt.plot(xs, ys, color=color)
+
+def plot(points, cen, r, a, b, c, radii):
     if (r != "N/A"):
         plt.xlim(cen[0] - r-2, cen[0] + r + 2) #circle plus padding
         plt.ylim(cen[1] - r-2, cen[1] + r + 2) #circle plus padding
         plt.autoscale(False)
+        
+    
     #plot points
     plt.plot([x for x, y in points],
-             [y for x, y in points], 'ro')
+             [y for x, y in points], 'ro', color="red")
     
     #plot circle and center
     if (r != "N/A"):
         plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
-
-        xs = []; ys = []
-        x = -r
-        while x <= r:
-            y = sqrt(r ** 2 - x ** 2)
-            xs.append(x+cen[0]); ys.append(y+cen[1]);
-            x += 0.1
-        plt.plot(xs, ys, color="green")
-        ys = [2*cen[1]-y for y in ys]
-        plt.plot(xs, ys, color="green")
+        plot_circle(r, cen[0], cen[1], "green")
+        
+    for r in radii:
+        plot_circle(r, 0, 0, "black")
+        
     plot_quadratic(a, b, c)
+    
     plt.show()
     return
 
@@ -93,20 +143,18 @@ def plot_quadratic(a,b,c):
         y = a * (x ** 2) + b * x + c
         xs.append(x); ys.append(y);
         x += 0.1
-    plt.plot(xs, ys, color="blue")        
+    plt.plot(xs, ys, color="blue")
     return
 
 if __name__ == "__main__":
-    from random import uniform as rand
+    r_1, r_2, r_3 = 2, 7, 10
     for i in range(5): #how many to show (in series)
-        points = ((rand(-10,10),rand(-10,10)),
-                  (rand(-10,10),rand(-10,10)),
-                  (rand(-10,10),rand(-10,10)))
+        points = gen_circle_points(r_1,r_2,r_3,1)[0]
         print("Points: "+str(points))
         cen, r = circle(points)
         print("Center: "+str(cen))
         print("Radius: "+str(r))
         a, b, c = quadratic(points)
-        print("Quadratic: {}x^2+{}x+{}".format(a,b,c))  
-        plot(points, cen, r, a, b, c)
+        print("Quadratic: {}x^2+{}x+{}".format(a,b,c))
+        plot(points, cen, r, a, b, c, (r_1, r_2, r_3))
         print("="*40)
