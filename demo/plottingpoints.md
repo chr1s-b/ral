@@ -4,7 +4,48 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from math import sqrt, isnan
+from random import uniform, randint
 
+def gen_circle_points(rad_0, rad_1, rad_2, num_sets):
+        points_list = []
+
+        for i in range(num_sets):
+                x0 = uniform(0, rad_0)
+                y0 = sqrt(rad_0**2 - x0**2)
+                x1 = uniform(0, rad_1)
+                y1 = sqrt(rad_1**2 - x1**2)
+                x2 = uniform(0, rad_2)
+                y2 = sqrt(rad_2**2 - x2**2)
+
+                a  = randint(0,1)
+                if a == 1:
+                        y0 = -y0
+
+                b  = randint(0,1)
+                if b == 1:
+                        y1 = -y1
+
+                c  = randint(0,1)
+                if c==1:
+                        y2 = -y2
+
+                points = [(x0, y0), (x1, y1), (x2, y2)]
+                points_list.append(points)
+
+        return points_list
+
+def gen_points(num_sets):
+
+        points_list = []
+
+        for i in range(num_sets):
+                point_set = []
+                for i in range(6):
+                        point_set.append(uniform(-10, 10))
+                points_list.append(point_set)
+
+        return points_list
+    
 def perpline(line, offset):
     x = offset[0] + line[0]/2 #midpoint x
     y = offset[1] + line[1]/2 #midpoint y
@@ -46,29 +87,38 @@ def center(points):
     y, x = C[0], C[1]
     return x, y
 
-def plot(points, cen, r, a, b, c):
+def plot_circle(r, cx, cy, color):
+    xs = []; ys = []
+    x = -r
+    while x <= r:
+       y = sqrt(r ** 2 - x ** 2)
+       xs.append(x+cx); ys.append(y+cy);
+       x += 0.1
+    plt.plot(xs, ys, color=color)
+    ys = [2*cy - y for y in ys]
+    plt.plot(xs, ys, color=color)
+
+def plot(points, cen, r, a, b, c, radii):
     if (r != "N/A"):
         plt.xlim(cen[0] - r-2, cen[0] + r + 2) #circle plus padding
         plt.ylim(cen[1] - r-2, cen[1] + r + 2) #circle plus padding
         plt.autoscale(False)
+        
+    
     #plot points
     plt.plot([x for x, y in points],
-             [y for x, y in points], 'ro')
+             [y for x, y in points], 'ro', color="red")
     
     #plot circle and center
     if (r != "N/A"):
         plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
-
-        xs = []; ys = []
-        x = -r
-        while x <= r:
-            y = sqrt(r ** 2 - x ** 2)
-            xs.append(x+cen[0]); ys.append(y+cen[1]);
-            x += 0.1
-        plt.plot(xs, ys, color="green")
-        ys = [2*cen[1]-y for y in ys]
-        plt.plot(xs, ys, color="green")
+        plot_circle(r, cen[0], cen[1], "green")
+        
+    for r in radii:
+        plot_circle(r, 0, 0, "black")
+        
     plot_quadratic(a, b, c)
+    
     plt.show()
     return
 
@@ -96,31 +146,28 @@ def plot_quadratic(a,b,c):
         y = a * (x ** 2) + b * x + c
         xs.append(x); ys.append(y);
         x += 0.1
-    plt.plot(xs, ys, color="blue")        
+    plt.plot(xs, ys, color="blue")
     return
 
 if __name__ == "__main__":
-    from random import uniform as rand
+    r_1, r_2, r_3 = 2, 7, 10
     for i in range(5): #how many to show (in series)
-        print("="*40)
-        points = ((rand(-10,10),rand(-10,10)),
-                  (rand(-10,10),rand(-10,10)),
-                  (rand(-10,10),rand(-10,10)))
+        points = gen_circle_points(r_1,r_2,r_3,1)[0]
         print("Points: "+str(points))
         cen, r = circle(points)
         print("Center: "+str(cen))
         print("Radius: "+str(r))
         a, b, c = quadratic(points)
-        print("Approx. quadratic equation: {}x^2+{}x+{}".format(round(a,2),round(b,2),round(c,2)))  
-        plot(points, cen, r, a, b, c)
+        print("Quadratic: {}x^2+{}x+{}".format(a,b,c))
+        plot(points, cen, r, a, b, c, (r_1, r_2, r_3))
+        print("="*40)
 
 ```
 
-    ========================================
-    Points: ((7.6108989105313825, 9.214517013713536), (-2.7531581756468837, 2.3335015453326236), (0.49648230279160366, -3.937366642695846))
-    Center: (4.766633714274075, 2.2529137534522503)
-    Radius: 7.520223697465466
-    Approx. quadratic equation: 0.36x^2+-1.11x+-3.48
+    Points: [(0.12941955705908725, -1.9958082518745706), (4.080168541318717, 5.6879016055513025), (0.3473730263614283, -9.993964777832494)]
+    Center: (16.49295218198515, -5.551942339310543)
+    Radius: 16.74548564882021
+    Quadratic: 10.35189260410158x^2+-41.6323296798235x+3.2188411994958024
 
 
 
@@ -128,10 +175,10 @@ if __name__ == "__main__":
 
 
     ========================================
-    Points: ((7.999371175378258, -1.2845517181872363), (-1.1430719461633174, 3.6872871732936936), (-1.966592653023163, 6.920611566044922))
-    Center: (6.819081364625115, 7.436767009433732)
-    Radius: 8.80082293800528
-    Approx. quadratic equation: 0.34x^2+-2.87x+-0.04
+    Points: [(1.6433011747171966, -1.139983003896585), (1.9365257964286404, -6.726802200136884), (1.0359656146589336, 9.946194008023589)]
+    Center: (-3636.5636450601446, -194.89265016578454)
+    Radius: 3643.3624414356505
+    Quadratic: -0.8874961521875869x^2+-15.875953073941808x+27.34561833284421
 
 
 
@@ -139,10 +186,10 @@ if __name__ == "__main__":
 
 
     ========================================
-    Points: ((8.218981057736052, -3.3342046937055203), (4.28972617025611, 6.760352896009888), (-1.4979977611907547, -6.793526420657329))
-    Center: (1.5936946685927742, -0.10106354453926458)
-    Radius: 7.3720839271266625
-    Approx. quadratic equation: -0.51x^2+3.75x+-0.04
+    Points: [(0.9244768569389681, -1.7735113591359506), (1.031138027428899, -6.923637365459722), (5.92319902678863, -8.0570288127231)]
+    Center: (4.2206099401954384, -4.281414624908717)
+    Radius: 4.141747468522376
+    Quadratic: 9.613104687854062x^2+-67.08444988230781x+52.02859839176591
 
 
 
@@ -150,10 +197,10 @@ if __name__ == "__main__":
 
 
     ========================================
-    Points: ((8.31053018031756, -4.382257810924697), (2.5799716505518298, 9.908080227350986), (-2.4787082479737705, 1.3629031516230032))
-    Center: (5.121995577192889, 2.6332828095781875)
-    Radius: 7.706138015455562
-    Approx. quadratic equation: -0.39x^2+1.73x+8.03
+    Points: [(0.5005276048645946, -1.9363553694424256), (3.589592491281918, -6.009561194174869), (9.959920837789113, 0.8944142803948378)]
+    Center: (5.483003932441068, -1.3656675649513952)
+    Radius: 5.015052833725158
+    Quadratic: 0.25396548259908575x^2+-2.3573379502765337x+-0.8200680861035121
 
 
 
@@ -161,12 +208,15 @@ if __name__ == "__main__":
 
 
     ========================================
-    Points: ((9.680052565888502, -3.0211663072216215), (-7.816288575673688, 5.9223945818482555), (5.2136341945094, 2.945665210470832))
-    Center: (-4.338250417108895, -8.859377116621115)
-    Radius: 15.185437892207878
-    Approx. quadratic equation: -0.06x^2+-0.39x+6.72
+    Points: [(0.4842263448002606, -1.9404960311738284), (1.0937498106269727, 6.914022805267095), (0.5520273534753994, 9.984751664463916)]
+    Center: (-23.49881013674431, 4.158676137861525)
+    Radius: 24.74643287471213
+    Quadratic: -297.8629316524044x^2+484.5475568906118x+-166.72973191439578
 
 
 
 ![png](output_0_9.png)
+
+
+    ========================================
 
