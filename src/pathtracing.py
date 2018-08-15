@@ -11,7 +11,7 @@ def gen_circle_points(radii, num_sets):
             
             for r in radii:
                 a = randint(0,1)
-                x = uniform(0,r)
+                x = uniform(-r,r)
                 y = sqrt(r**2 - x**2)
                 if a == 0: y = -y
                 points.append((x,y))
