@@ -72,8 +72,8 @@ def plot_circle(r, cx, cy, color, lw=2):
         
 def plot(points, cen, r, a, b, c, radii, tolerance):
     if (r != "N/A"):
-        plt.xlim(cen[0] - r-2, cen[0] + r + 2) #circle plus padding
-        plt.ylim(cen[1] - r-2, cen[1] + r + 2) #circle plus padding
+        plt.xlim(-radii[-1] -2, radii[-1] +2) #2 units padding
+        plt.ylim(-radii[-1] -2, radii[-1] +2)
         plt.autoscale(False)
             
     #plot circle and center
@@ -161,5 +161,5 @@ if __name__ == "__main__":
         print("Quadratic through origin: "+str(quad_near_origin([a,b,c],tolerance)))
         print("Circle through origin: "+str(circle_near_origin(r,cen,tolerance)))
         print("Tolerance: {}".format(tolerance))
+        print("Graph below:")
         plot(points, cen, r, a, b, c, radii, tolerance)
-        print("="*40)
