@@ -85,14 +85,28 @@ def plot_setup(radii, tolerance):
     plt.plot([0],[0], 'ro', color="black")
     return
 
-def plot(points, cen, r, a, b, c):     
+def plot(points, acc, tolerance): #points and feedback accuracy for rounding output
+    cen, r = circle(points)
+    print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
+    print("Radius: "+str(round(r,acc)))
+    a, b, c = quadratic(points)
+    print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
+    
     #plot circle and center
     if (r != "N/A"):
-        plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
-        plot_circle(r, cen[0], cen[1], "green")
-            
-    #plot the quadratic    
-    plot_quadratic(a, b, c)
+        if circle_near_origin(r, cen, tolerance):
+            plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
+            plot_circle(r, cen[0], cen[1], "green")
+            print("Circle plotted: TRUE")
+        else:
+            print("Circle plotted: FALSE")
+    
+    #plot the quadratic
+    if quad_near_origin([a,b,c,], tolerance):
+        plot_quadratic(a, b, c)
+        print("Quadratic plotted: TRUE")
+    else:
+        print("Quadratic plotted: FALSE")
     
     #plot points
     plt.plot([x for x, y in points],
@@ -180,20 +194,13 @@ if __name__ == "__main__":
     radii = (3, 7, 11)
     tolerance = 1
     acc = 2 #accuracy of output
-    num_sets = 2
+    num_sets = 10
     plot_setup(radii, tolerance)
     for i in range(num_sets): #how many to show (in series)
         points = gen_circle_points(radii,1)[0]
         rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
         print("Points: "+str(rounded_points))
-        cen, r = circle(points)
-        print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
-        print("Radius: "+str(round(r,acc)))
-        a, b, c = quadratic(points)
-        print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
-        print("Quadratic through origin: "+str(quad_near_origin([a,b,c],tolerance)))
-        print("Circle through origin: "+str(circle_near_origin(r,cen,tolerance)))
-        print("Tolerance: {}".format(tolerance))
+        plot(points, acc, tolerance)
         print("="*50)
-        plot(points, cen, r, a, b, c)
+    print("Tolerance: {}".format(tolerance))
     plt.show() #unindented to show all plots on one graph
