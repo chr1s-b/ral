@@ -85,12 +85,14 @@ def plot_setup(radii, tolerance):
     plt.plot([0],[0], 'ro', color="black")
     return
 
+def stayswithin(a,b,c, r):
+    x = -b/(2*a)
+    y = a*x**2 + b*x + c
+    return (x**2 + y**2) <= r**2
+
 def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for rounding output
     cen, r = circle(points)
-    print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
-    print("Radius: "+str(round(r,acc)))
     a, b, c = quadratic(points)
-    print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
     
     road = road #maximum sector size between points
     
@@ -101,17 +103,17 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
             #plt.plot([cen[0]], [cen[1]], 'ro', color="green")
             plot_circle(r, cen[0], cen[1], "green", lw=1)
             print("Circle plotted: TRUE")
+            print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
+            print("Radius: "+str(round(r,acc)))
             circ = True
-        else:
-            print("Circle plotted: FALSE")
     
     #plot the quadratic
-    if quad_near_origin([a,b,c], tolerance) and minsector(points) < road:
+    if (quad_near_origin([a,b,c], tolerance) and minsector(points) < road and 
+        stayswithin(a,b,c,radii[-1])):
         plot_quadratic(a, b, c,clip)
         print("Quadratic plotted: TRUE")
+        print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
         q = True
-    else:
-        print("Quadratic plotted: FALSE")
     
     #plot points
     if q or circ:
@@ -250,14 +252,11 @@ if __name__ == "__main__":
     combos = combinations(gen_lots(radii, num_sets))
     circles=quadratics=[] #empty sets for reasonable paths
     for combo in combos:
-        print("Points: "+str([(round(p[0], acc), round(p[1],acc)) for p in combo]))
         c, q = plot(combo, acc, tolerance,road,radii[-1])
-        if c: #good circle combo
-            circles.append(c)
-            print("Found suitable circle sector")
-        if q: #good quadratic combo
-            quadratics.append(q)
-            print("Found suitable quadratic")
-        print("="*50)
+        if c or q: 
+            print("Points: "+str([(round(p[0], acc), round(p[1],acc)) for p in combo]))
+            print("="*50)
+        if c: circles.append(c) #good circle combo
+        if q: quadratics.append(q) #good quadratic combo
     print("Tolerance: {}".format(tolerance))
     plt.show() #unindented to show all plots on one graph
