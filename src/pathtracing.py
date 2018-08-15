@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from math import sqrt, isnan
+from math import sqrt, isnan, atan, degrees
 from random import uniform, randint
 
 def gen_circle_points(radii, num_sets):
@@ -85,33 +85,39 @@ def plot_setup(radii, tolerance):
     plt.plot([0],[0], 'ro', color="black")
     return
 
-def plot(points, acc, tolerance): #points and feedback accuracy for rounding output
+def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for rounding output
     cen, r = circle(points)
     print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
     print("Radius: "+str(round(r,acc)))
     a, b, c = quadratic(points)
     print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
     
+    road = road #maximum sector size between points
+    
+    circ=q= False
     #plot circle and center
     if (r != "N/A"):
-        if circle_near_origin(r, cen, tolerance):
-            plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
-            plot_circle(r, cen[0], cen[1], "green")
+        if circle_near_origin(r, cen, tolerance) and minsector(points) < road:
+            #plt.plot([cen[0]], [cen[1]], 'ro', color="green")
+            plot_circle(r, cen[0], cen[1], "green", lw=1)
             print("Circle plotted: TRUE")
+            circ = True
         else:
             print("Circle plotted: FALSE")
     
     #plot the quadratic
-    if quad_near_origin([a,b,c,], tolerance):
-        plot_quadratic(a, b, c)
+    if quad_near_origin([a,b,c], tolerance) and minsector(points) < road:
+        plot_quadratic(a, b, c,clip)
         print("Quadratic plotted: TRUE")
+        q = True
     else:
         print("Quadratic plotted: FALSE")
     
     #plot points
-    plt.plot([x for x, y in points],
-             [y for x, y in points], 'ro', color="red")
-    return
+    if q or circ:
+        plt.plot([x for x, y in points],
+                 [y for x, y in points], 'ro', color="red")
+    return circ, q
 
 def circle(points):
     c = center(points)
@@ -128,7 +134,7 @@ def quadratic(points):
         x_2_coeff = ((y1-y2)*(x0-x1)-(y0-y1)*(x1-x2))/((x1**2 - x2**2)*(x0-x1) - (x0**2-x1**2)*(x1-x2))
         x_coeff = ((y1-y2)*(x0**2-x1**2)-(y0-y1)*(x1**2-x2**2))/((x0**2-x1**2)*(x1-x2)-(x1**2-x2**2)*(x0-x1))
         coeff_1   = x0*x1*y2/((-x0 + x2)*(-x1 + x2)) + x0*x2*y1/((-x0 + x1)*(x1 - x2)) + x1*x2*y0/((x0 - x1)*(x0 - x2))
-        return x_2_coeff, x_coeff, coeff_1
+        return [x_2_coeff, x_coeff, coeff_1]
 
 def quad_near_origin(coeffs, tolerance):
         t = tolerance
@@ -147,14 +153,14 @@ def circle_near_origin(radius, centre, tolerance):
         dist = sqrt(a**2 + b**2)
         return (abs(dist - radius) <= tolerance)
         
-def plot_quadratic(a,b,c):
+def plot_quadratic(a,b,c,clip):
     xs = []; ys = []
-    x = -10
-    while x <= 10:
-        y = a * (x ** 2) + b * x + c
+    x = -clip
+    while x <= clip:
+        y = (a * (x ** 2)) + (b * x) + c
         xs.append(x); ys.append(y);
         x += 0.1
-    plt.plot(xs, ys, color="blue")
+    plt.plot(xs, ys, color="blue", linewidth=1)
     return
 
 def gen_lots(radii, num_sets):
@@ -189,8 +195,9 @@ def gen_lots(radii, num_sets):
         
     return points_r1, points_r2, points_r3
 
-def combinations(points_r1, points_r2, points_r3):
+def combinations(points):
     combo_list = []
+    points_r1, points_r2, points_r3 = points
     
     for i in points_r1:
         for n in points_r2:
@@ -199,32 +206,58 @@ def combinations(points_r1, points_r2, points_r3):
                 combo_list.append(point_set)
     return combo_list
 
-def check_points(combinations, tolerance):
-    good_combos_circle = []
-    good_combos_quad = []
-    for i in combinations:
-        coeffs = quadratic(i)
-        c, r = circle(i)
-        quad_orig = quad_near_origin(coeffs, tolerance)
-        circ_orig = circle_near_origin(r, c, tolerance)
-        if quad_orig == True:
-            good_combos_quad.append(i)
-        if circ_orig == True:
-            good_combos_circle.append(i)
-    return good_combos_circle, good_combos_quad
+def angle(point):
+    if point[0] > 0: #right quadrants
+        if point[1] > 0: #top right
+            return degrees(atan(point[0]/point[1]))
+        elif point[1] < 0: #bottom right
+            return 180 + degrees(atan(point[0]/point[1]))
+        return 90
+    elif point[0] < 0: #left quadrants
+        if point[1] > 0: #top left
+            return 360 + degrees(atan(point[0]/point[1]))
+        elif point[1] < 0:         #bottom left
+            return 180 + degrees(atan(point[0]/point[1]))
+        return 270
+    if point[1] > 0: return 0
+    return 180
+
+def sector(ps):
+    angles = []
+    for point in ps:
+        angles.append(angle(point))
+    angles = sorted(angles)
+    sector = angles[-1] - angles[0]
+    return sector    
+
+def minsector(points):
+    s = [sector(points)] 
+    #switch points locally to find minimum sector
+    npoints = []
+    for p in points:
+        npoints.append((p[1],p[0]))
+    s.append(sector(npoints))
+    return sorted(s)[0]
 
 if __name__ == "__main__":
     print("="*40)
     radii = (3, 7, 11)
     tolerance = 1
+    road = 70
     acc = 2 #accuracy of output
-    num_sets = 10
+    num_sets = 6
     plot_setup(radii, tolerance)
-    for i in range(num_sets): #how many to show (in series)
-        points = gen_circle_points(radii,1)[0]
-        rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
-        print("Points: "+str(rounded_points))
-        plot(points, acc, tolerance)
+    combos = combinations(gen_lots(radii, num_sets))
+    circles=quadratics=[] #empty sets for reasonable paths
+    for combo in combos:
+        print("Points: "+str([(round(p[0], acc), round(p[1],acc)) for p in combo]))
+        c, q = plot(combo, acc, tolerance,road,radii[-1])
+        if c: #good circle combo
+            circles.append(c)
+            print("Found suitable circle sector")
+        if q: #good quadratic combo
+            quadratics.append(q)
+            print("Found suitable quadratic")
         print("="*50)
     print("Tolerance: {}".format(tolerance))
     plt.show() #unindented to show all plots on one graph
