@@ -189,6 +189,16 @@ def gen_lots(radii, num_sets):
         
     return points_r1, points_r2, points_r3
 
+def combinations(points_r1, points_r2, points_r3):
+    combo_list = []
+    
+    for i in points_r1:
+        for n in points_r2:
+            for m in points_r3:
+                point_set = [i, n, m]
+                combo_list.append(point_set)
+    return combo_list
+
 if __name__ == "__main__":
     print("="*40)
     radii = (3, 7, 11)
