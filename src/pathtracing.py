@@ -97,7 +97,6 @@ def plot(points, cen, r, a, b, c, radii, tolerance):
     
     #plot origin
     plt.plot([0],[0], 'ro', color="black")
-    plt.show()
     return
 
 def circle(points):
@@ -162,5 +161,6 @@ if __name__ == "__main__":
         print("Quadratic through origin: "+str(quad_near_origin([a,b,c],tolerance)))
         print("Circle through origin: "+str(circle_near_origin(r,cen,tolerance)))
         print("Tolerance: {}".format(tolerance))
-        print("Graph below:")
+        print("="*50)
         plot(points, cen, r, a, b, c, radii, tolerance)
+    plt.show() #unindented to show all plots on one graph
