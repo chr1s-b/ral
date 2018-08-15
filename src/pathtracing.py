@@ -30,18 +30,6 @@ def gen_circle_points(rad_0, rad_1, rad_2, num_sets):
                 points_list.append(points)
 
         return points_list
-
-def gen_points(num_sets):
-
-        points_list = []
-
-        for i in range(num_sets):
-                point_set = []
-                for i in range(6):
-                        point_set.append(uniform(-10, 10))
-                points_list.append(point_set)
-
-        return points_list
     
 def perpline(line, offset):
     x = offset[0] + line[0]/2 #midpoint x
@@ -70,14 +58,12 @@ def center(points):
     y, g2, c2 = perpline(cb, b)
 
     #form and solve simultaneous equations
-    #print("y = {}x + {}".format(g1, c1))
-    #print("y = {}x + {}".format(g2, c2))
-    A = np.array([[y,-g1],[y,-g2]])      #y = 0x + c
+    A = np.array([[y,-g1],[y,-g2]])
     B = np.array([c1, c2])
     try:
         C = np.linalg.solve(A,B)
     except:
-        print("[INFO] No reasonable solution, or one or more linear equations were parallel to an axis.\n       Please use a different tracing method (parabola).")
+        print("[WARN] Lines do not converge, no real solution by this method.\n       Please use a different tracing method (parabola).")
         return "N/A", "N/A"
     #return solution
     if (isnan(C[0]) or isnan(C[1])): return "N/A", "N/A"
@@ -148,13 +134,14 @@ def plot_quadratic(a,b,c):
 
 if __name__ == "__main__":
     r_1, r_2, r_3 = 2, 7, 10
+    acc = 2 #accuracy of output
     for i in range(5): #how many to show (in series)
         points = gen_circle_points(r_1,r_2,r_3,1)[0]
         print("Points: "+str(points))
         cen, r = circle(points)
-        print("Center: "+str(cen))
-        print("Radius: "+str(r))
+        print("Center: "+str(round(cen,acc)))
+        print("Radius: "+str(round(r,acc)))
         a, b, c = quadratic(points)
-        print("Quadratic: {}x^2+{}x+{}".format(a,b,c))
+        print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
         plot(points, cen, r, a, b, c, (r_1, r_2, r_3))
         print("="*40)
