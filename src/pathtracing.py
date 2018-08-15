@@ -70,7 +70,7 @@ def plot_circle(r, cx, cy, color, lw=2):
     plt.plot(xs, ys, color=color, linewidth=lw)
 
         
-def plot(points, cen, r, a, b, c, radii):
+def plot(points, cen, r, a, b, c, radii, tolerance):
     if (r != "N/A"):
         plt.xlim(cen[0] - r-2, cen[0] + r + 2) #circle plus padding
         plt.ylim(cen[1] - r-2, cen[1] + r + 2) #circle plus padding
@@ -84,6 +84,9 @@ def plot(points, cen, r, a, b, c, radii):
     #plot 'detector' rings
     for r in radii:
         plot_circle(r, 0, 0, "black", lw=0.8)
+    
+    #plot tolerance
+    plot_circle(tolerance, 0, 0, "red", lw= 1)
         
     #plot the quadratic    
     plot_quadratic(a, b, c)
@@ -92,6 +95,8 @@ def plot(points, cen, r, a, b, c, radii):
     plt.plot([x for x, y in points],
              [y for x, y in points], 'ro', color="red")
     
+    #plot origin
+    plt.plot([0],[0], 'ro', color="black")
     plt.show()
     return
 
@@ -112,25 +117,22 @@ def quadratic(points):
         coeff_1   = x0*x1*y2/((-x0 + x2)*(-x1 + x2)) + x0*x2*y1/((-x0 + x1)*(x1 - x2)) + x1*x2*y0/((x0 - x1)*(x0 - x2))
         return x_2_coeff, x_coeff, coeff_1
 
-def is_through_centre_quad(coeffs, tolerance):
-        a = coeffs[0]
-        b = coeffs[1]
-        c = coeffs[2]
-        r_sq = ((a+1)*b**2)/((2*a+2)**2) - (b**2/(2*a+c)) + c
-
-        if r_sq < (tolerance**2):
-                return True
-        else:
-                return False
-
-def is_through_centre_circle(radius, centre):
+def quad_near_origin(coeffs, tolerance):
+        t = tolerance
+        x = -t
+        a, b, c = coeffs[0], coeffs[1], coeffs[2]
+        while x <= t:
+            y = a*x**2 + b*x + c
+            if sqrt(x**2+y**2) <= t: return True
+            x += 0.025
+        return False
+    
+def circle_near_origin(radius, centre, tolerance):
         a = centre[0]
         b = centre[1]
 
-        if a**2 + b**2 == radius**2:
-                return True
-        else:
-                return False
+        dist = sqrt(a**2 + b**2)
+        return (abs(dist - radius) <= tolerance)
         
 def plot_quadratic(a,b,c):
     xs = []; ys = []
@@ -145,8 +147,9 @@ def plot_quadratic(a,b,c):
 if __name__ == "__main__":
     print("="*40)
     radii = (3, 7, 11)
+    tolerance = 1
     acc = 2 #accuracy of output
-    for i in range(3): #how many to show (in series)
+    for i in range(5): #how many to show (in series)
         points = gen_circle_points(radii,1)[0]
         rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
         print("Points: "+str(rounded_points))
@@ -155,5 +158,8 @@ if __name__ == "__main__":
         print("Radius: "+str(round(r,acc)))
         a, b, c = quadratic(points)
         print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
-        plot(points, cen, r, a, b, c, radii)
+        print("Quadratic through origin: "+str(quad_near_origin([a,b,c],tolerance)))
+        print("Circle through origin: "+str(circle_near_origin(r,cen,tolerance)))
+        print("Tolerance: {}".format(tolerance))
+        plot(points, cen, r, a, b, c, radii, tolerance)
         print("="*40)
