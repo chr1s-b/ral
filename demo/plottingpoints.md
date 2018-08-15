@@ -14,7 +14,7 @@ def gen_circle_points(radii, num_sets):
             
             for r in radii:
                 a = randint(0,1)
-                x = uniform(0,r)
+                x = uniform(-r,r)
                 y = sqrt(r**2 - x**2)
                 if a == 0: y = -y
                 points.append((x,y))
@@ -72,35 +72,48 @@ def plot_circle(r, cx, cy, color, lw=2):
     ys = [2*cy - y for y in ys]
     plt.plot(xs, ys, color=color, linewidth=lw)
 
-        
-def plot(points, cen, r, a, b, c, radii, tolerance):
-    if (r != "N/A"):
-        plt.xlim(-radii[-1] -2, radii[-1] +2) #2 units padding
-        plt.ylim(-radii[-1] -2, radii[-1] +2)
-        plt.autoscale(False)
-            
-    #plot circle and center
-    if (r != "N/A"):
-        plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
-        plot_circle(r, cen[0], cen[1], "green")
-      
+def plot_setup(radii, tolerance):
+    plt.xlim(-radii[-1] -2, radii[-1] +2) #2 units padding
+    plt.ylim(-radii[-1] -2, radii[-1] +2)
+    plt.autoscale(False)
+    
     #plot 'detector' rings
     for r in radii:
         plot_circle(r, 0, 0, "black", lw=0.8)
     
     #plot tolerance
     plot_circle(tolerance, 0, 0, "red", lw= 1)
-        
-    #plot the quadratic    
-    plot_quadratic(a, b, c)
+    
+    #plot origin
+    plt.plot([0],[0], 'ro', color="black")
+    return
+
+def plot(points, acc, tolerance): #points and feedback accuracy for rounding output
+    cen, r = circle(points)
+    print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
+    print("Radius: "+str(round(r,acc)))
+    a, b, c = quadratic(points)
+    print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
+    
+    #plot circle and center
+    if (r != "N/A"):
+        if circle_near_origin(r, cen, tolerance):
+            plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
+            plot_circle(r, cen[0], cen[1], "green")
+            print("Circle plotted: TRUE")
+        else:
+            print("Circle plotted: FALSE")
+    
+    #plot the quadratic
+    if quad_near_origin([a,b,c,], tolerance):
+        plot_quadratic(a, b, c)
+        print("Quadratic plotted: TRUE")
+    else:
+        print("Quadratic plotted: FALSE")
     
     #plot points
     plt.plot([x for x, y in points],
              [y for x, y in points], 'ro', color="red")
-    
-    #plot origin
-    plt.plot([0],[0], 'ro', color="black")
-    plt.show()
     return
 
 def circle(points):
@@ -147,92 +160,129 @@ def plot_quadratic(a,b,c):
     plt.plot(xs, ys, color="blue")
     return
 
+def gen_lots(radii, num_sets):
+    points_r1 = []
+    points_r2 = []
+    points_r3 = []
+    
+    r1 = radii[0]
+    r2 = radii[1]
+    r3 = radii[2]
+    
+    for i in range(num_sets):
+        a = randint(0,1)
+        x = uniform(-r1,r1)
+        y = sqrt(r1**2 - x**2)
+        if a == 0: y = -y
+        points_r1.append((x,y))
+        
+    for i in range(num_sets):
+        a = randint(0,1)
+        x = uniform(-r2,r2)
+        y = sqrt(r2**2 - x**2)
+        if a == 0: y = -y
+        points_r2.append((x,y))
+        
+    for i in range(num_sets):
+        a = randint(0,1)
+        x = uniform(-r3,r3)
+        y = sqrt(r3**2 - x**2)
+        if a == 0: y = -y
+        points_r3.append((x,y))
+        
+    return points_r1, points_r2, points_r3
+
 if __name__ == "__main__":
     print("="*40)
     radii = (3, 7, 11)
     tolerance = 1
     acc = 2 #accuracy of output
-    for i in range(5): #how many to show (in series)
+    num_sets = 10
+    plot_setup(radii, tolerance)
+    for i in range(num_sets): #how many to show (in series)
         points = gen_circle_points(radii,1)[0]
         rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
         print("Points: "+str(rounded_points))
-        cen, r = circle(points)
-        print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
-        print("Radius: "+str(round(r,acc)))
-        a, b, c = quadratic(points)
-        print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
-        print("Quadratic through origin: "+str(quad_near_origin([a,b,c],tolerance)))
-        print("Circle through origin: "+str(circle_near_origin(r,cen,tolerance)))
-        print("Tolerance: {}".format(tolerance))
-        print("Graph below:")
-        plot(points, cen, r, a, b, c, radii, tolerance)
+        plot(points, acc, tolerance)
+        print("="*50)
+    print("Tolerance: {}".format(tolerance))
+    plt.show() #unindented to show all plots on one graph
 ```
 
     ========================================
-    Points: [(0.22, 2.99), (5.0, -4.9), (6.74, 8.7)]
-    Center: (7.06,1.75)
-    Radius: 6.96
-    Quadratic: 1.46x^2+-9.25x+4.93
-    Quadratic through origin: True
-    Circle through origin: True
+    Points: [(0.22, -2.99), (-1.21, -6.9), (-10.55, 3.11)]
+    Center: (-6.71,-2.67)
+    Radius: 6.94
+    Quadratic: 0.35x^2+3.08x+-3.69
+    Circle plotted: TRUE
+    Quadratic plotted: FALSE
+    ==================================================
+    Points: [(-0.49, -2.96), (-4.5, -5.36), (5.78, -9.36)]
+    Center: (0.16,-8.6)
+    Radius: 5.67
+    Quadratic: -0.16x^2+-0.19x+-3.01
+    Circle plotted: FALSE
+    Quadratic plotted: FALSE
+    ==================================================
+    Points: [(1.52, 2.59), (5.69, 4.07), (-8.14, 7.4)]
+    Center: (0.38,12.39)
+    Radius: 9.87
+    Quadratic: 0.06x^2+-0.09x+2.58
+    Circle plotted: FALSE
+    Quadratic plotted: FALSE
+    ==================================================
+    Points: [(-2.37, 1.84), (-4.74, 5.15), (9.86, -4.88)]
+    Center: (13.04,15.39)
+    Radius: 20.52
+    Quadratic: 0.06x^2+-0.98x+-0.81
+    Circle plotted: TRUE
+    Quadratic plotted: TRUE
+    ==================================================
+    Points: [(0.34, -2.98), (-2.84, 6.4), (10.08, -4.4)]
+    Center: (6.37,4.29)
+    Radius: 9.45
+    Quadratic: 0.22x^2+-2.41x+-2.2
+    Circle plotted: FALSE
+    Quadratic plotted: TRUE
+    ==================================================
+    Points: [(2.61, -1.48), (-6.69, -2.06), (3.51, -10.43)]
+    Center: (-1.75,-6.43)
+    Radius: 6.6
+    Quadratic: -0.98x^2+-3.95x+15.53
+    Circle plotted: TRUE
+    Quadratic plotted: FALSE
+    ==================================================
+    Points: [(-2.13, 2.11), (-0.66, 6.97), (-9.15, 6.11)]
+    Center: (-4.8,5.57)
+    Radius: 4.37
+    Quadratic: 0.46x^2+4.57x+9.78
+    Circle plotted: FALSE
+    Quadratic plotted: FALSE
+    ==================================================
+    Points: [(2.37, -1.84), (-3.5, 6.06), (0.82, 10.97)]
+    Center: (2.95,4.73)
+    Radius: 6.59
+    Quadratic: -1.6x^2+-3.16x+14.66
+    Circle plotted: FALSE
+    Quadratic plotted: FALSE
+    ==================================================
+    Points: [(-2.54, -1.59), (6.32, -3.01), (7.42, 8.12)]
+    Center: (2.73,2.97)
+    Radius: 6.97
+    Quadratic: 1.04x^2+-4.08x+-18.67
+    Circle plotted: FALSE
+    Quadratic plotted: FALSE
+    ==================================================
+    Points: [(0.12, 3.0), (-3.99, -5.75), (-2.65, -10.68)]
+    Center: (6.77,-5.47)
+    Radius: 10.76
+    Quadratic: 2.1x^2+10.25x+1.78
+    Circle plotted: FALSE
+    Quadratic plotted: TRUE
+    ==================================================
     Tolerance: 1
 
 
 
 ![png](output_0_1.png)
-
-
-    Points: [(1.95, 2.28), (0.4, -6.99), (7.07, -8.42)]
-    Center: (4.76,-2.96)
-    Radius: 5.94
-    Quadratic: -1.2x^2+8.78x+-10.28
-    Quadratic through origin: False
-    Circle through origin: True
-    Tolerance: 1
-
-
-
-![png](output_0_3.png)
-
-
-    Points: [(0.58, -2.94), (4.99, 4.91), (10.36, -3.69)]
-    Center: (5.68,-0.64)
-    Radius: 5.59
-    Quadratic: -0.35x^2+3.71x+-4.99
-    Quadratic through origin: False
-    Circle through origin: True
-    Tolerance: 1
-
-
-
-![png](output_0_5.png)
-
-
-    Points: [(2.34, -1.88), (6.72, 1.95), (3.21, 10.52)]
-    Center: (0.65,4.47)
-    Radius: 6.57
-    Quadratic: -3.79x^2+35.19x+-63.41
-    Quadratic through origin: False
-    Circle through origin: False
-    Tolerance: 1
-
-
-
-![png](output_0_7.png)
-
-
-    Points: [(0.53, 2.95), (5.31, 4.56), (4.24, 10.15)]
-    Center: (1.89,6.8)
-    Radius: 4.09
-    Quadratic: -1.5x^2+9.09x+-1.41
-    Quadratic through origin: True
-    Circle through origin: False
-    Tolerance: 1
-
-
-
-![png](output_0_9.png)
-
-
-    ========================================
 
