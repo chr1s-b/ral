@@ -3,32 +3,20 @@ import numpy as np
 from math import sqrt, isnan
 from random import uniform, randint
 
-def gen_circle_points(rad_0, rad_1, rad_2, num_sets):
+def gen_circle_points(radii, num_sets):
         points_list = []
 
         for i in range(num_sets):
-                x0 = uniform(0, rad_0)
-                y0 = sqrt(rad_0**2 - x0**2)
-                x1 = uniform(0, rad_1)
-                y1 = sqrt(rad_1**2 - x1**2)
-                x2 = uniform(0, rad_2)
-                y2 = sqrt(rad_2**2 - x2**2)
-
-                a  = randint(0,1)
-                if a == 1:
-                        y0 = -y0
-
-                b  = randint(0,1)
-                if b == 1:
-                        y1 = -y1
-
-                c  = randint(0,1)
-                if c==1:
-                        y2 = -y2
-
-                points = [(x0, y0), (x1, y1), (x2, y2)]
-                points_list.append(points)
-
+            points = []
+            
+            for r in radii:
+                a = randint(0,1)
+                x = uniform(0,r)
+                y = sqrt(r**2 - x**2)
+                if a == 0: y = -y
+                points.append((x,y))
+                
+            points_list.append(points)
         return points_list
     
 def perpline(line, offset):
@@ -133,15 +121,17 @@ def plot_quadratic(a,b,c):
     return
 
 if __name__ == "__main__":
-    r_1, r_2, r_3 = 2, 7, 10
+    print("="*40)
+    radii = (3, 7, 11)
     acc = 2 #accuracy of output
-    for i in range(5): #how many to show (in series)
-        points = gen_circle_points(r_1,r_2,r_3,1)[0]
-        print("Points: "+str(points))
+    for i in range(3): #how many to show (in series)
+        points = gen_circle_points(radii,1)[0]
+        rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
+        print("Points: "+str(rounded_points))
         cen, r = circle(points)
-        print("Center: "+str(round(cen,acc)))
+        print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
         print("Radius: "+str(round(r,acc)))
         a, b, c = quadratic(points)
         print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
-        plot(points, cen, r, a, b, c, (r_1, r_2, r_3))
+        plot(points, cen, r, a, b, c, radii)
         print("="*40)
