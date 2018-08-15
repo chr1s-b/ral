@@ -143,6 +143,38 @@ def plot_quadratic(a,b,c):
     plt.plot(xs, ys, color="blue")
     return
 
+def gen_lots(radii, num_sets):
+    points_r1 = []
+    points_r2 = []
+    points_r3 = []
+    
+    r1 = radii[0]
+    r2 = radii[1]
+    r3 = radii[2]
+    
+    for i in range(num_sets):
+        a = randint(0,1)
+        x = uniform(-r1,r1)
+        y = sqrt(r1**2 - x**2)
+        if a == 0: y = -y
+        points_r1.append((x,y))
+        
+    for i in range(num_sets):
+        a = randint(0,1)
+        x = uniform(-r2,r2)
+        y = sqrt(r2**2 - x**2)
+        if a == 0: y = -y
+        points_r2.append((x,y))
+        
+    for i in range(num_sets):
+        a = randint(0,1)
+        x = uniform(-r3,r3)
+        y = sqrt(r3**2 - x**2)
+        if a == 0: y = -y
+        points_r3.append((x,y))
+        
+    return points_r1, points_r2, points_r3
+
 if __name__ == "__main__":
     print("="*40)
     radii = (3, 7, 11)
