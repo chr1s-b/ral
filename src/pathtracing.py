@@ -69,6 +69,7 @@ def plot_circle(r, cx, cy, color, lw=2):
     ys = [2*cy - y for y in ys]
     plt.plot(xs, ys, color=color, linewidth=lw)
 
+        
 def plot(points, cen, r, a, b, c, radii):
     if (r != "N/A"):
         plt.xlim(cen[0] - r-2, cen[0] + r + 2) #circle plus padding
@@ -111,6 +112,20 @@ def quadratic(points):
         coeff_1   = x0*x1*y2/((-x0 + x2)*(-x1 + x2)) + x0*x2*y1/((-x0 + x1)*(x1 - x2)) + x1*x2*y0/((x0 - x1)*(x0 - x2))
         return x_2_coeff, x_coeff, coeff_1
 
+def is_through_centre_quad(coeffs):
+        if coeffs[2] == 0:
+                return True
+        else:
+                return False
+def is_through_centre_circle(radius, centre):
+        a = centre[0]
+        b = centre[1]
+
+        if a**2 + b**2 == radius**2:
+                return True
+        else:
+                return False
+        
 def plot_quadratic(a,b,c):
     xs = []; ys = []
     x = -10
