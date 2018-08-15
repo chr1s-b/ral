@@ -112,11 +112,17 @@ def quadratic(points):
         coeff_1   = x0*x1*y2/((-x0 + x2)*(-x1 + x2)) + x0*x2*y1/((-x0 + x1)*(x1 - x2)) + x1*x2*y0/((x0 - x1)*(x0 - x2))
         return x_2_coeff, x_coeff, coeff_1
 
-def is_through_centre_quad(coeffs):
-        if coeffs[2] == 0:
+def is_through_centre_quad(coeffs, tolerance):
+        a = coeffs[0]
+        b = coeffs[1]
+        c = coeffs[2]
+        r_sq = ((a+1)*b**2)/((2*a+2)**2) - (b**2/(2*a+c)) + c
+
+        if r_sq < (tolerance**2):
                 return True
         else:
                 return False
+
 def is_through_centre_circle(radius, centre):
         a = centre[0]
         b = centre[1]
