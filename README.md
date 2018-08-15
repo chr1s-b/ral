@@ -2,4 +2,3 @@
 
 ### Demo output from test data
 ![](demooutput.png)
-This uses circles only
