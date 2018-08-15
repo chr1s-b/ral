@@ -199,6 +199,20 @@ def combinations(points_r1, points_r2, points_r3):
                 combo_list.append(point_set)
     return combo_list
 
+def check_points(combinations, tolerance):
+    good_combos_circle = []
+    good_combos_quad = []
+    for i in combinations:
+        coeffs = quadratic(i)
+        c, r = circle(i)
+        quad_orig = quad_near_origin(coeffs, tolerance)
+        circ_orig = circle_near_origin(r, c, tolerance)
+        if quad_orig == True:
+            good_combos_quad.append(i)
+        if circ_orig == True:
+            good_combos_circle.append(i)
+    return good_combos_circle, good_combos_quad
+
 if __name__ == "__main__":
     print("="*40)
     radii = (3, 7, 11)
