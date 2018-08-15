@@ -69,34 +69,34 @@ def plot_circle(r, cx, cy, color, lw=2):
     ys = [2*cy - y for y in ys]
     plt.plot(xs, ys, color=color, linewidth=lw)
 
-        
-def plot(points, cen, r, a, b, c, radii, tolerance):
-    if (r != "N/A"):
-        plt.xlim(-radii[-1] -2, radii[-1] +2) #2 units padding
-        plt.ylim(-radii[-1] -2, radii[-1] +2)
-        plt.autoscale(False)
-            
-    #plot circle and center
-    if (r != "N/A"):
-        plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
-        plot_circle(r, cen[0], cen[1], "green")
-      
+def plot_setup(radii, tolerance):
+    plt.xlim(-radii[-1] -2, radii[-1] +2) #2 units padding
+    plt.ylim(-radii[-1] -2, radii[-1] +2)
+    plt.autoscale(False)
+    
     #plot 'detector' rings
     for r in radii:
         plot_circle(r, 0, 0, "black", lw=0.8)
     
     #plot tolerance
     plot_circle(tolerance, 0, 0, "red", lw= 1)
-        
+    
+    #plot origin
+    plt.plot([0],[0], 'ro', color="black")
+    return
+
+def plot(points, cen, r, a, b, c):     
+    #plot circle and center
+    if (r != "N/A"):
+        plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
+        plot_circle(r, cen[0], cen[1], "green")
+            
     #plot the quadratic    
     plot_quadratic(a, b, c)
     
     #plot points
     plt.plot([x for x, y in points],
              [y for x, y in points], 'ro', color="red")
-    
-    #plot origin
-    plt.plot([0],[0], 'ro', color="black")
     return
 
 def circle(points):
@@ -148,7 +148,8 @@ if __name__ == "__main__":
     radii = (3, 7, 11)
     tolerance = 1
     acc = 2 #accuracy of output
-    num_sets = 1
+    num_sets = 2
+    plot_setup(radii, tolerance)
     for i in range(num_sets): #how many to show (in series)
         points = gen_circle_points(radii,1)[0]
         rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
@@ -162,5 +163,5 @@ if __name__ == "__main__":
         print("Circle through origin: "+str(circle_near_origin(r,cen,tolerance)))
         print("Tolerance: {}".format(tolerance))
         print("="*50)
-        plot(points, cen, r, a, b, c, radii, tolerance)
+        plot(points, cen, r, a, b, c)
     plt.show() #unindented to show all plots on one graph
