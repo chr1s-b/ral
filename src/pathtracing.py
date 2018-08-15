@@ -149,7 +149,8 @@ if __name__ == "__main__":
     radii = (3, 7, 11)
     tolerance = 1
     acc = 2 #accuracy of output
-    for i in range(5): #how many to show (in series)
+    num_sets = 1
+    for i in range(num_sets): #how many to show (in series)
         points = gen_circle_points(radii,1)[0]
         rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
         print("Points: "+str(rounded_points))
