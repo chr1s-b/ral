@@ -58,37 +58,38 @@ def center(points):
     y, x = C[0], C[1]
     return x, y
 
-def plot_circle(r, cx, cy, color):
+def plot_circle(r, cx, cy, color, lw=2):
     xs = []; ys = []
     x = -r
     while x <= r:
        y = sqrt(r ** 2 - x ** 2)
        xs.append(x+cx); ys.append(y+cy);
        x += 0.1
-    plt.plot(xs, ys, color=color)
+    plt.plot(xs, ys, color=color, linewidth=lw)
     ys = [2*cy - y for y in ys]
-    plt.plot(xs, ys, color=color)
+    plt.plot(xs, ys, color=color, linewidth=lw)
 
 def plot(points, cen, r, a, b, c, radii):
     if (r != "N/A"):
         plt.xlim(cen[0] - r-2, cen[0] + r + 2) #circle plus padding
         plt.ylim(cen[1] - r-2, cen[1] + r + 2) #circle plus padding
         plt.autoscale(False)
-        
-    
-    #plot points
-    plt.plot([x for x, y in points],
-             [y for x, y in points], 'ro', color="red")
-    
+            
     #plot circle and center
     if (r != "N/A"):
         plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
         plot_circle(r, cen[0], cen[1], "green")
-        
+      
+    #plot 'detector' rings
     for r in radii:
-        plot_circle(r, 0, 0, "black")
+        plot_circle(r, 0, 0, "black", lw=0.8)
         
+    #plot the quadratic    
     plot_quadratic(a, b, c)
+    
+    #plot points
+    plt.plot([x for x, y in points],
+             [y for x, y in points], 'ro', color="red")
     
     plt.show()
     return
