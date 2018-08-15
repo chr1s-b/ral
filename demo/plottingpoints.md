@@ -3,7 +3,7 @@
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-from math import sqrt, isnan
+from math import sqrt, isnan, atan, degrees
 from random import uniform, randint
 
 def gen_circle_points(radii, num_sets):
@@ -88,33 +88,35 @@ def plot_setup(radii, tolerance):
     plt.plot([0],[0], 'ro', color="black")
     return
 
-def plot(points, acc, tolerance): #points and feedback accuracy for rounding output
+def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for rounding output
     cen, r = circle(points)
-    print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
-    print("Radius: "+str(round(r,acc)))
     a, b, c = quadratic(points)
-    print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
     
+    road = road #maximum sector size between points
+    
+    circ=q= False
     #plot circle and center
     if (r != "N/A"):
-        if circle_near_origin(r, cen, tolerance):
-            plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
-            plot_circle(r, cen[0], cen[1], "green")
+        if circle_near_origin(r, cen, tolerance) and minsector(points) < road:
+            #plt.plot([cen[0]], [cen[1]], 'ro', color="green")
+            plot_circle(r, cen[0], cen[1], "green", lw=1)
             print("Circle plotted: TRUE")
-        else:
-            print("Circle plotted: FALSE")
+            print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
+            print("Radius: "+str(round(r,acc)))
+            circ = True
     
     #plot the quadratic
-    if quad_near_origin([a,b,c,], tolerance):
-        plot_quadratic(a, b, c)
+    if quad_near_origin([a,b,c], tolerance) and minsector(points) < road:
+        plot_quadratic(a, b, c,clip)
         print("Quadratic plotted: TRUE")
-    else:
-        print("Quadratic plotted: FALSE")
+        print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
+        q = True
     
     #plot points
-    plt.plot([x for x, y in points],
-             [y for x, y in points], 'ro', color="red")
-    return
+    if q or circ:
+        plt.plot([x for x, y in points],
+                 [y for x, y in points], 'ro', color="red")
+    return circ, q
 
 def circle(points):
     c = center(points)
@@ -131,7 +133,7 @@ def quadratic(points):
         x_2_coeff = ((y1-y2)*(x0-x1)-(y0-y1)*(x1-x2))/((x1**2 - x2**2)*(x0-x1) - (x0**2-x1**2)*(x1-x2))
         x_coeff = ((y1-y2)*(x0**2-x1**2)-(y0-y1)*(x1**2-x2**2))/((x0**2-x1**2)*(x1-x2)-(x1**2-x2**2)*(x0-x1))
         coeff_1   = x0*x1*y2/((-x0 + x2)*(-x1 + x2)) + x0*x2*y1/((-x0 + x1)*(x1 - x2)) + x1*x2*y0/((x0 - x1)*(x0 - x2))
-        return x_2_coeff, x_coeff, coeff_1
+        return [x_2_coeff, x_coeff, coeff_1]
 
 def quad_near_origin(coeffs, tolerance):
         t = tolerance
@@ -150,14 +152,14 @@ def circle_near_origin(radius, centre, tolerance):
         dist = sqrt(a**2 + b**2)
         return (abs(dist - radius) <= tolerance)
         
-def plot_quadratic(a,b,c):
+def plot_quadratic(a,b,c,clip):
     xs = []; ys = []
-    x = -10
-    while x <= 10:
-        y = a * (x ** 2) + b * x + c
+    x = -clip
+    while x <= clip:
+        y = (a * (x ** 2)) + (b * x) + c
         xs.append(x); ys.append(y);
         x += 0.1
-    plt.plot(xs, ys, color="blue")
+    plt.plot(xs, ys, color="blue", linewidth=1)
     return
 
 def gen_lots(radii, num_sets):
@@ -192,93 +194,96 @@ def gen_lots(radii, num_sets):
         
     return points_r1, points_r2, points_r3
 
+def combinations(points):
+    combo_list = []
+    points_r1, points_r2, points_r3 = points
+    
+    for i in points_r1:
+        for n in points_r2:
+            for m in points_r3:
+                point_set = [i, n, m]
+                combo_list.append(point_set)
+    return combo_list
+
+def angle(point):
+    if point[0] > 0: #right quadrants
+        if point[1] > 0: #top right
+            return degrees(atan(point[0]/point[1]))
+        elif point[1] < 0: #bottom right
+            return 180 + degrees(atan(point[0]/point[1]))
+        return 90
+    elif point[0] < 0: #left quadrants
+        if point[1] > 0: #top left
+            return 360 + degrees(atan(point[0]/point[1]))
+        elif point[1] < 0:         #bottom left
+            return 180 + degrees(atan(point[0]/point[1]))
+        return 270
+    if point[1] > 0: return 0
+    return 180
+
+def sector(ps):
+    angles = []
+    for point in ps:
+        angles.append(angle(point))
+    angles = sorted(angles)
+    sector = angles[-1] - angles[0]
+    return sector    
+
+def minsector(points):
+    s = [sector(points)] 
+    #switch points locally to find minimum sector
+    npoints = []
+    for p in points:
+        npoints.append((p[1],p[0]))
+    s.append(sector(npoints))
+    return sorted(s)[0]
+
 if __name__ == "__main__":
     print("="*40)
     radii = (3, 7, 11)
     tolerance = 1
+    road = 70
     acc = 2 #accuracy of output
-    num_sets = 10
+    num_sets = 6
     plot_setup(radii, tolerance)
-    for i in range(num_sets): #how many to show (in series)
-        points = gen_circle_points(radii,1)[0]
-        rounded_points = [(round(point[0], acc), round(point[1],acc)) for point in points]
-        print("Points: "+str(rounded_points))
-        plot(points, acc, tolerance)
-        print("="*50)
+    combos = combinations(gen_lots(radii, num_sets))
+    circles=quadratics=[] #empty sets for reasonable paths
+    for combo in combos:
+        c, q = plot(combo, acc, tolerance,road,radii[-1])
+        if c or q: 
+            print("Points: "+str([(round(p[0], acc), round(p[1],acc)) for p in combo]))
+            print("="*50)
+        if c: circles.append(c) #good circle combo
+        if q: quadratics.append(q) #good quadratic combo
     print("Tolerance: {}".format(tolerance))
     plt.show() #unindented to show all plots on one graph
 ```
 
     ========================================
-    Points: [(0.22, -2.99), (-1.21, -6.9), (-10.55, 3.11)]
-    Center: (-6.71,-2.67)
-    Radius: 6.94
-    Quadratic: 0.35x^2+3.08x+-3.69
-    Circle plotted: TRUE
-    Quadratic plotted: FALSE
-    ==================================================
-    Points: [(-0.49, -2.96), (-4.5, -5.36), (5.78, -9.36)]
-    Center: (0.16,-8.6)
-    Radius: 5.67
-    Quadratic: -0.16x^2+-0.19x+-3.01
-    Circle plotted: FALSE
-    Quadratic plotted: FALSE
-    ==================================================
-    Points: [(1.52, 2.59), (5.69, 4.07), (-8.14, 7.4)]
-    Center: (0.38,12.39)
-    Radius: 9.87
-    Quadratic: 0.06x^2+-0.09x+2.58
-    Circle plotted: FALSE
-    Quadratic plotted: FALSE
-    ==================================================
-    Points: [(-2.37, 1.84), (-4.74, 5.15), (9.86, -4.88)]
-    Center: (13.04,15.39)
-    Radius: 20.52
-    Quadratic: 0.06x^2+-0.98x+-0.81
-    Circle plotted: TRUE
     Quadratic plotted: TRUE
+    Quadratic: 1.09x^2+9.67x+7.69
+    Points: [(-1.26, -2.72), (-1.9, -6.74), (-6.55, -8.84)]
     ==================================================
-    Points: [(0.34, -2.98), (-2.84, 6.4), (10.08, -4.4)]
-    Center: (6.37,4.29)
-    Radius: 9.45
-    Quadratic: 0.22x^2+-2.41x+-2.2
-    Circle plotted: FALSE
-    Quadratic plotted: TRUE
-    ==================================================
-    Points: [(2.61, -1.48), (-6.69, -2.06), (3.51, -10.43)]
-    Center: (-1.75,-6.43)
-    Radius: 6.6
-    Quadratic: -0.98x^2+-3.95x+15.53
     Circle plotted: TRUE
-    Quadratic plotted: FALSE
+    Center: (5.7,-5.9)
+    Radius: 7.64
+    Points: [(-1.26, -2.72), (-1.9, -6.74), (0.0, -11.0)]
     ==================================================
-    Points: [(-2.13, 2.11), (-0.66, 6.97), (-9.15, 6.11)]
-    Center: (-4.8,5.57)
-    Radius: 4.37
-    Quadratic: 0.46x^2+4.57x+9.78
-    Circle plotted: FALSE
-    Quadratic plotted: FALSE
-    ==================================================
-    Points: [(2.37, -1.84), (-3.5, 6.06), (0.82, 10.97)]
-    Center: (2.95,4.73)
-    Radius: 6.59
-    Quadratic: -1.6x^2+-3.16x+14.66
-    Circle plotted: FALSE
-    Quadratic plotted: FALSE
-    ==================================================
-    Points: [(-2.54, -1.59), (6.32, -3.01), (7.42, 8.12)]
-    Center: (2.73,2.97)
-    Radius: 6.97
-    Quadratic: 1.04x^2+-4.08x+-18.67
-    Circle plotted: FALSE
-    Quadratic plotted: FALSE
-    ==================================================
-    Points: [(0.12, 3.0), (-3.99, -5.75), (-2.65, -10.68)]
-    Center: (6.77,-5.47)
-    Radius: 10.76
-    Quadratic: 2.1x^2+10.25x+1.78
-    Circle plotted: FALSE
     Quadratic plotted: TRUE
+    Quadratic: 4.98x^2+7.19x+-11.03
+    Points: [(0.75, -2.91), (-1.9, -6.74), (0.0, -11.0)]
+    ==================================================
+    Quadratic plotted: TRUE
+    Quadratic: 2.09x^2+9.36x+-11.05
+    Points: [(0.75, -2.91), (-5.07, -4.83), (0.0, -11.0)]
+    ==================================================
+    Quadratic plotted: TRUE
+    Quadratic: 0.34x^2+-3.62x+-0.39
+    Points: [(0.75, -2.91), (2.17, -6.65), (8.05, -7.5)]
+    ==================================================
+    Quadratic plotted: TRUE
+    Quadratic: -16.12x^2+-36.31x+-7.04
+    Points: [(-1.96, 2.27), (-0.49, 6.98), (-1.52, 10.89)]
     ==================================================
     Tolerance: 1
 
