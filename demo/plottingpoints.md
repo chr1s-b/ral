@@ -61,37 +61,38 @@ def center(points):
     y, x = C[0], C[1]
     return x, y
 
-def plot_circle(r, cx, cy, color):
+def plot_circle(r, cx, cy, color, lw=2):
     xs = []; ys = []
     x = -r
     while x <= r:
        y = sqrt(r ** 2 - x ** 2)
        xs.append(x+cx); ys.append(y+cy);
        x += 0.1
-    plt.plot(xs, ys, color=color)
+    plt.plot(xs, ys, color=color, linewidth=lw)
     ys = [2*cy - y for y in ys]
-    plt.plot(xs, ys, color=color)
+    plt.plot(xs, ys, color=color, linewidth=lw)
 
 def plot(points, cen, r, a, b, c, radii):
     if (r != "N/A"):
         plt.xlim(cen[0] - r-2, cen[0] + r + 2) #circle plus padding
         plt.ylim(cen[1] - r-2, cen[1] + r + 2) #circle plus padding
         plt.autoscale(False)
-        
-    
-    #plot points
-    plt.plot([x for x, y in points],
-             [y for x, y in points], 'ro', color="red")
-    
+            
     #plot circle and center
     if (r != "N/A"):
         plt.plot([cen[0]], [cen[1]], 'ro', color="blue")
         plot_circle(r, cen[0], cen[1], "green")
-        
+      
+    #plot 'detector' rings
     for r in radii:
-        plot_circle(r, 0, 0, "black")
+        plot_circle(r, 0, 0, "black", lw=0.8)
         
+    #plot the quadratic    
     plot_quadratic(a, b, c)
+    
+    #plot points
+    plt.plot([x for x, y in points],
+             [y for x, y in points], 'ro', color="red")
     
     plt.show()
     return
@@ -141,10 +142,10 @@ if __name__ == "__main__":
 ```
 
     ========================================
-    Points: [(0.78, 2.9), (1.2, 6.9), (8.45, 7.05)]
-    Center: (4.88,4.49)
-    Radius: 4.39
-    Quadratic: -1.24x^2+11.96x+-5.72
+    Points: [(0.51, 2.96), (2.3, 6.61), (6.74, 8.7)]
+    Center: (7.19,1.96)
+    Radius: 6.75
+    Quadratic: -0.25x^2+2.76x+1.61
 
 
 
@@ -152,10 +153,10 @@ if __name__ == "__main__":
 
 
     ========================================
-    Points: [(0.53, -2.95), (3.71, 5.94), (7.73, -7.83)]
-    Center: (7.49,-0.43)
-    Radius: 7.4
-    Quadratic: -0.86x^2+6.46x+-6.12
+    Points: [(1.53, -2.58), (6.95, -0.83), (4.67, 9.96)]
+    Center: (2.45,3.85)
+    Radius: 6.5
+    Quadratic: -1.61x^2+14.0x+-20.27
 
 
 
@@ -163,10 +164,10 @@ if __name__ == "__main__":
 
 
     ========================================
-    Points: [(2.94, 0.58), (1.4, -6.86), (7.16, -8.35)]
-    Center: (5.27,-3.78)
-    Radius: 4.95
-    Quadratic: -1.2x^2+10.04x+-18.54
+    Points: [(2.04, -2.2), (4.14, -5.64), (10.68, -2.64)]
+    Center: (6.38,-1.91)
+    Radius: 4.36
+    Quadratic: 0.24x^2+-3.14x+3.19
 
 
 
