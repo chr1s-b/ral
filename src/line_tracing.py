@@ -45,7 +45,7 @@ def transform_data(data):
         points = []
         for point in i:
             r = np.sqrt(point[0]**2 + point[1]**2)
-            theta = degrees(np.arctan2(point[1], point[0]))
+            theta = (np.arctan2(point[1], point[0]))
             z = point[2]
             new_point = (r, theta, z)
             points.append(new_point)
@@ -56,16 +56,17 @@ def transform_data(data):
 def road_angle(points):
     
     sorted_points = sorted(points, key=lambda tup: abs(tup[0]*np.sin(tup[1])))
+    print(sorted_points)
     r1, theta1, z1 = sorted_points[0]
     r2, theta2, z2 = sorted_points[1]
     r3, theta3, z3 = sorted_points[2]
-    
+    print(r1, z1)
     a = r3*np.sin(theta3) - r1*np.sin(theta1)
     b = (z3 + r3*np.cos(theta3)) - (z1 + r1*np.cos(theta1))
     c = r2*np.sin(theta2) - r1*np.sin(theta1)
     d = (z2 + r2*np.cos(theta3)) - (z1 + r1*np.cos(theta1))
     
-    road = degrees(np.arctan2(a, b) - np.arctan2(c, d))
+    road = (np.arctan2(a, b) - np.arctan2(c, d))
     return road
     
 def is_line_rtz(points):
@@ -82,10 +83,10 @@ def line_angle(points):
     r2, theta2, z2 = sorted_points[1]
     r3, theta3, z3 = sorted_points[2]
     
-    a = r3*np.sin(theta3) - r1*np.sin(theta1)
-    b = (z3 + r3*np.cos(theta3)) - (z1 + r1*np.cos(theta1))
-    c = r2*np.sin(theta2) - r1*np.sin(theta1)
-    d = (z2 + r2*np.cos(theta3)) - (z1 + r1*np.cos(theta1))
+    a = r3*np.sin((theta3)) - r1*np.sin((theta1))
+    b = (z3 + r3*np.cos((theta3))) - (z1 + r1*np.cos((theta1)))
+    c = r2*np.sin((theta2)) - r1*np.sin((theta1))
+    d = (z2 + r2*np.cos((theta3))) - (z1 + r1*np.cos((theta1)))
     
     y = atan(a/b)
     x = atan(c/d)
@@ -94,26 +95,33 @@ def line_angle(points):
 
 def plot_line_rtz(points):
     angle = line_angle(points)
-    sorted_points = sorted(points, key=lambda tup: abs(tup[0]*np.sin(tup[1])))
-    grad = np.tan(radians(angle))
-    cpoint1 = (sorted_points[0][2] + sorted_points[0][0]*np.cos(sorted_points[0][1]), sorted_points[0][0]*np.sin(sorted_points[0][1]) )
-    cpoint2 = (sorted_points[1][2] + sorted_points[1][0]*np.cos(sorted_points[1][1]), sorted_points[1][0]*np.sin(sorted_points[1][1]) )
-    cpoint3 =(sorted_points[2][2] + sorted_points[2][0]*np.cos(sorted_points[2][1]), sorted_points[2][0]*np.sin(sorted_points[2][1]) )
+    sorted_points = sorted(points, key=lambda tup: abs(tup[0]*np.sin((tup[1]))))
+    grad = np.tan((angle))
+    cpoint1 = (sorted_points[0][2] + sorted_points[0][0]*np.cos((sorted_points[0][1])), sorted_points[0][0]*np.sin((sorted_points[0][1])))
+    cpoint2 = (sorted_points[1][2] + sorted_points[1][0]*np.cos((sorted_points[1][1])), sorted_points[1][0]*np.sin((sorted_points[1][1])))
+    cpoint3 =(sorted_points[2][2] + sorted_points[2][0]*np.cos((sorted_points[2][1])), sorted_points[2][0]*np.sin((sorted_points[2][1])))
     converted_points = [cpoint1, cpoint2, cpoint3]
+    print(converted_points)
     yend = sorted_points[2][1]
     
     y = np.linspace(0, yend, 100)
     z = ((y - sorted_points[0][1] + grad*sorted_points[0][0])/grad)
     plt.plot(z, y)
-
-def lines(data):
+    
+    zpoints = [cpoint1[0], cpoint2[0], cpoint3[0]]
+    ypoints = [cpoint1[1], cpoint2[1], cpoint3[1]]
+    plt.plot(zpoints, ypoints, 'ro')
+    
+def lines(data, xyz):
     lines = []
     
     for i in data:
         if is_line_rtz(i):
-            print(str(i)+" is a line with angle "+str(line_angle(i)))
+            print(str(i)+" is a line with angle "+str(degrees(line_angle(i))))
+            print("Real coordinates " + str(xyz[data.index(i)]))
             lines.append(i)
             plot_line_rtz(i)
+            print("======================================================")
             
     if len(lines) != 0:
         sorted_lines = sorted(lines, key = lambda tup: tup[0])
@@ -122,10 +130,18 @@ def lines(data):
         plt.plot([minz, maxz], [0,0])
 
 def main():
-    xyz = realdata_xyz(100)
+    xyz = realdata_xyz(10)
     data = transform_data(xyz)
-    lines(data)
+    lines(data, xyz)
 
 if __name__ == "__main__":
     main()    
     
+
+
+
+ 
+
+
+
+
