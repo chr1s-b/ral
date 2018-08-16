@@ -1,14 +1,8 @@
-"""
-Created on Thu Aug 16 11:52:33 2018
-Author: olliebreach
-
-Description: 
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
-from random import randint
-from math import degrees, radians, atan
+from matplotlib.colors import hsv_to_rgb
+from random import randint, uniform
+from math import sin, acos, pi, sqrt, atan, degrees
 import urllib.request
 
 def realdata_xyz(sets):
@@ -32,116 +26,134 @@ def realdata_xyz(sets):
     max_layer = 14
     for i in range(min_layer, max_layer+1):
         points += layers[i]
-    print(len(points))
     for i in range(sets):
         #select three random points
         combo = [points[randint(0,len(points)-1)] for j in range(3)]
         combos.append(combo)
     return combos
 
-def transform_data(data):
-    new_data = []
-    for i in data:
-        points = []
-        for point in i:
-            r = np.sqrt(point[0]**2 + point[1]**2)
-            theta = (np.arctan2(point[1], point[0]))
+def angle(point):
+    if point[0] > 0: #right quadrants
+        if point[1] > 0: #top right
+            return degrees(atan(point[0]/point[1]))
+        elif point[1] < 0: #bottom right
+            return 180 + degrees(atan(point[0]/point[1]))
+        return 90
+    elif point[0] < 0: #left quadrants
+        if point[1] > 0: #top left
+            return 360 + degrees(atan(point[0]/point[1]))
+        elif point[1] < 0:         #bottom left
+            return 180 + degrees(atan(point[0]/point[1]))
+        return 270
+    if point[1] > 0: return 0
+    return 180
+
+def sector(ps):
+    angles = []
+    for point in ps:
+        angles.append(angle(point))
+    angles = sorted(angles)
+    sector = angles[-1] - angles[0]
+    return sector    
+
+def minsector(points):
+    s = [sector(points)] 
+    #switch points locally to find minimum sector
+    npoints = []
+    for p in points:
+        npoints.append((p[1],p[0]))
+    s.append(sector(npoints))
+    return sorted(s)[0]
+
+def radius(point):
+    x, y, z = point
+    #3d pythagoras
+    return sqrt(x**2 + y**2 + z**2)
+        
+def transform_data(xyz):
+    rtz = []
+    for trio in xyz:
+        new_trio = []
+        for point in trio:
+            #get radius
+            r = radius(point)
+            #get theta
             z = point[2]
-            new_point = (r, theta, z)
-            points.append(new_point)
-        new_data.append(points)
-    
-    return new_data
+            t = acos(z/float(r))
+            if point[1] < 0: t = -t
+            #use z and append
+            new_trio.append((r,t,z))
+        rtz.append(new_trio)
+    return rtz
 
-def road_angle(points):
+def rtz_to_xy(rtz):
+    xy = []
+    for trio in rtz:
+        new_trio = []
+        for point in trio:
+            r, t, z = point
+            #basic trig
+            y = r * sin(t)
+            x = z
+            new_trio.append((x,y))
+        xy.append(new_trio)
+    return xy
     
-    sorted_points = sorted(points, key=lambda tup: abs(tup[0]*np.sin(tup[1])))
-    print(sorted_points)
-    r1, theta1, z1 = sorted_points[0]
-    r2, theta2, z2 = sorted_points[1]
-    r3, theta3, z3 = sorted_points[2]
-    print(r1, z1)
-    a = r3*np.sin(theta3) - r1*np.sin(theta1)
-    b = (z3 + r3*np.cos(theta3)) - (z1 + r1*np.cos(theta1))
-    c = r2*np.sin(theta2) - r1*np.sin(theta1)
-    d = (z2 + r2*np.cos(theta3)) - (z1 + r1*np.cos(theta1))
-    
-    road = (np.arctan2(a, b) - np.arctan2(c, d))
-    return road
-    
-def is_line_rtz(points):
-    road = road_angle(points)
-    
-    if road <= 0.5:
-        return True
-    else:
-        return False
-    
-def line_angle(points):
-    sorted_points = sorted(points, key=lambda tup: abs(tup[0]*np.sin(tup[1])))
-    r1, theta1, z1 = sorted_points[0]
-    r2, theta2, z2 = sorted_points[1]
-    r3, theta3, z3 = sorted_points[2]
-    
-    a = r3*np.sin((theta3)) - r1*np.sin((theta1))
-    b = (z3 + r3*np.cos((theta3))) - (z1 + r1*np.cos((theta1)))
-    c = r2*np.sin((theta2)) - r1*np.sin((theta1))
-    d = (z2 + r2*np.cos((theta3))) - (z1 + r1*np.cos((theta1)))
-    
-    y = atan(a/b)
-    x = atan(c/d)
-    angle = (x + y)/2
-    return angle
+def checkroads(combos, road):
+    good = []
+    for combo in combos:
+        if minsector(combo) < road:
+            good.append(combo)
+    return good
 
-def plot_line_rtz(points):
-    angle = line_angle(points)
-    sorted_points = sorted(points, key=lambda tup: abs(tup[0]*np.sin((tup[1]))))
-    grad = np.tan((angle))
-    cpoint1 = (sorted_points[0][2] + sorted_points[0][0]*np.cos((sorted_points[0][1])), sorted_points[0][0]*np.sin((sorted_points[0][1])))
-    cpoint2 = (sorted_points[1][2] + sorted_points[1][0]*np.cos((sorted_points[1][1])), sorted_points[1][0]*np.sin((sorted_points[1][1])))
-    cpoint3 =(sorted_points[2][2] + sorted_points[2][0]*np.cos((sorted_points[2][1])), sorted_points[2][0]*np.sin((sorted_points[2][1])))
-    converted_points = [cpoint1, cpoint2, cpoint3]
-    print(converted_points)
-    yend = sorted_points[2][1]
-    
-    y = np.linspace(0, yend, 100)
-    z = ((y - sorted_points[0][1] + grad*sorted_points[0][0])/grad)
-    plt.plot(z, y)
-    
-    zpoints = [cpoint1[0], cpoint2[0], cpoint3[0]]
-    ypoints = [cpoint1[1], cpoint2[1], cpoint3[1]]
-    plt.plot(zpoints, ypoints, 'ro')
-    
-def lines(data, xyz):
+def plot(points, lines):
+    for trio, line in zip(points,lines):
+        color = hsv_to_rgb([uniform(0,1),1,1])
+        #plot just points
+        plt.plot([x for x,y in trio],
+                [y for x, y in trio], 'ro', color=color, markersize=4, alpha=0.8)
+        #plot lines of best fit 
+        m, c = line
+        x_int = -c/m
+        outer = 3000; 
+        if trio[0][0] < 0: 
+            outer = -outer
+        x = np.linspace(x_int,outer)
+        y = m*x + c
+        #plt.plot(x, y, color=color, alpha=0.8, linewidth=1)
+    return
+
+def linesof(xy):
     lines = []
-    
-    for i in data:
-        if is_line_rtz(i):
-            print(str(i)+" is a line with angle "+str(degrees(line_angle(i))))
-            print("Real coordinates " + str(xyz[data.index(i)]))
-            lines.append(i)
-            plot_line_rtz(i)
-            print("======================================================")
-            
-    if len(lines) != 0:
-        sorted_lines = sorted(lines, key = lambda tup: tup[0])
-        minz = sorted_lines[0][0]
-        maxz = sorted_lines [len(sorted_lines)-1][0]
-        plt.plot([minz, maxz], [0,0])
+    for trio in xy:
+        mean_x = sum([x for x,y in trio])
+        mean_y = sum([y for x,y in trio])
 
-def main():
-    xyz = realdata_xyz(10)
-    data = transform_data(xyz)
-    lines(data, xyz)
+        top = sum([(x-mean_x)*(y-mean_y) for x,y in trio])
+        bottom = sum([(x-mean_x)**2 for x,y in trio])
+        m = top / bottom
+            
+        #y-intercept
+        c = mean_y - m*mean_x
+        lines.append((m,c))
+    return lines
+
+def side_view(xyz):
+    rtz = transform_data(xyz)
+    xy = rtz_to_xy(rtz)
+    #xy = checkroads(xy, 5)
+    #convert to a root along y=0,x=0 and return angle of line - these are best fits
+    mc = linesof(xy)
+    #setup plot
+    plt.subplot(1,1,1)
+    plt.title("Side view")
+    #limit the plot
+    plt.xlim(-1000, 1000)
+    plt.ylim(-1000, 1000)
+    plt.autoscale(False)
+    plot(xy, mc)
+    plt.show()
 
 if __name__ == "__main__":
-    main()    
-    
-
-
-
- 
-
-
-
-
+    data = realdata_xyz(100000)
+    side_view(data) 
