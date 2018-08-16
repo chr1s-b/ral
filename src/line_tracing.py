@@ -120,7 +120,7 @@ def plot(points, lines):
             outer = -outer
         x = np.linspace(x_int,outer)
         y = m*x + c
-        #plt.plot(x, y, color=color, alpha=0.8, linewidth=1)
+        plt.plot(x, y, color=color, alpha=0.8, linewidth=1)
     return
 
 def linesof(xy):
@@ -141,19 +141,19 @@ def linesof(xy):
 def side_view(xyz):
     rtz = transform_data(xyz)
     xy = rtz_to_xy(rtz)
-    #xy = checkroads(xy, 5)
+    xy = checkroads(xy, 10)
     #convert to a root along y=0,x=0 and return angle of line - these are best fits
     mc = linesof(xy)
     #setup plot
-    plt.subplot(1,1,1)
     plt.title("Side view")
     #limit the plot
-    plt.xlim(-1000, 1000)
-    plt.ylim(-1000, 1000)
+    plt.xlim(-3000, 3000)
+    plt.ylim(-3000, 3000)
     plt.autoscale(False)
     plot(xy, mc)
-    plt.show()
 
 if __name__ == "__main__":
-    data = realdata_xyz(100000)
-    side_view(data) 
+    data = realdata_xyz(1000000)
+    plt.subplot(1,1,1)
+    side_view(data)
+    plt.show()

@@ -3,6 +3,7 @@ from matplotlib.colors import hsv_to_rgb
 import numpy as np
 from math import sqrt, isnan, atan, degrees
 from random import uniform, randint
+import urllib.request
 
 ## Artificial data generation
 
@@ -257,8 +258,7 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
 
 #Real data retrieval
 
-def realdataxy(sets):
-    import urllib.request
+def realdata_xyz(sets):
     with urllib.request.urlopen('https://gist.githubusercontent.com/StewMH/9f75f8c2915e33b4248ed994173ebc53/raw/03a4f4221a424167beb824ad902768c900a08c50/event') as response:
         code = response.read().decode().split("\n")[1:]
     layers = {}
@@ -267,15 +267,17 @@ def realdataxy(sets):
     for line in code:
         try:
             l = line.split(",")
-            x, y = float(l[1]), float(l[2])
+            x, y, z = float(l[1]), float(l[2]), float(l[3])
             layer = int(l[5])
-            point = (x,y)
+            point = (x, y, z)
             layers[layer].append(point)
         except:
             continue
     combos = []
     points = []
-    for i in range(2, 15):
+    min_layer = 2
+    max_layer = 14
+    for i in range(min_layer, max_layer+1):
         points += layers[i]
     for i in range(sets):
         #select three random points
@@ -286,6 +288,7 @@ def realdataxy(sets):
 def xyplot(combos, acc, tolerance, road, radii):
     circles=quadratics=[] #empty sets for reasonable paths
     for combo in combos:
+        combo = [point[:2] for point in combo]
         c, q = plot(combo, acc, tolerance,road,radii[-1])
         if c or q: 
             print("Points: "+str([(round(p[0], acc), round(p[1],acc)) for p in combo]))
@@ -295,19 +298,20 @@ def xyplot(combos, acc, tolerance, road, radii):
     print("Tolerance: {}".format(tolerance))
     return
 
-if __name__ == "__main__":
+def front_view(combos):
     print("="*40)
     radii = (100, 500, 1000)
     tolerance = 1
     road = 70
     acc = 2 #accuracy of output
-    num_sets = 100000
     plot_setup(radii, tolerance)
     #combos = combinations(gen_lots(radii, num_sets))
-    plt.subplot(1,1,1)
-    combos = realdataxy(num_sets)
     xyplot(combos,acc,tolerance,road,radii)
     plt.title("XY slice")
+
+if __name__ == "__main__":
+    num_sets = 10000
+    front_view(realdata_xyz(num_sets))
     try:
         plt.show() #unindented to show all plots on one graph
     except:
