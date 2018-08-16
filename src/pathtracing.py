@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.colors import hsv_to_rgb
 import numpy as np
 from math import sqrt, isnan, atan, degrees
 from random import uniform, randint
@@ -183,16 +184,16 @@ def minsector(points):
 
 #Data plotting
 
-def plot_circle(r, cx, cy, color, lw=2):
+def plot_circle(r, cx, cy, color, lw=2, alpha=1):
     xs = []; ys = []
     x = -r
     while x <= r:
        y = sqrt(r ** 2 - x ** 2)
        xs.append(x+cx); ys.append(y+cy);
        x += 0.1
-    plt.plot(xs, ys, color=color, linewidth=lw)
+    plt.plot(xs, ys, color=color, linewidth=lw, alpha = alpha)
     ys = [2*cy - y for y in ys]
-    plt.plot(xs, ys, color=color, linewidth=lw) 
+    plt.plot(xs, ys, color=color, linewidth=lw, alpha = alpha) 
     return
 
 def plot_quadratic(a,b,c,clip):
@@ -233,7 +234,8 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
         if (circle_near_origin(r, cen, tolerance) and minsector(points) < road and
            r > 1000):
             #plt.plot([cen[0]], [cen[1]], 'ro', color="green")
-            plot_circle(r, cen[0], cen[1], "green", lw=1)
+            color = hsv_to_rgb([1-(((r-1000)/30000.)%1), 1, 1])
+            plot_circle(r, cen[0], cen[1], color, lw=1, alpha=0.7)
             print("Circle plotted: TRUE")
             print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
             print("Radius: "+str(round(r,acc)))
@@ -250,7 +252,7 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
     #plot points
     if q or circ:
         plt.plot([x for x, y in points],
-                 [y for x, y in points], 'ro', color="red")
+                 [y for x, y in points], 'ro', color="blue", markersize=4)
     return circ, q
 
 #Real data retrieval
@@ -283,11 +285,11 @@ def realdataxy(sets):
 
 if __name__ == "__main__":
     print("="*40)
-    radii = (3, 100, 1000)
+    radii = (100, 500, 1000)
     tolerance = 1
     road = 70
     acc = 2 #accuracy of output
-    num_sets = 1000000
+    num_sets = 500000
     plot_setup(radii, tolerance)
     #combos = combinations(gen_lots(radii, num_sets))
     combos = realdataxy(num_sets)
@@ -301,4 +303,3 @@ if __name__ == "__main__":
         if q: quadratics.append(q) #good quadratic combo
     print("Tolerance: {}".format(tolerance))
     plt.show() #unindented to show all plots on one graph
-        
