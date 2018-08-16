@@ -99,7 +99,8 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
     circ=q= False
     #plot circle and center
     if (r != "N/A"):
-        if circle_near_origin(r, cen, tolerance) and minsector(points) < road:
+        if (circle_near_origin(r, cen, tolerance) and minsector(points) < road and
+           r > 1000):
             #plt.plot([cen[0]], [cen[1]], 'ro', color="green")
             plot_circle(r, cen[0], cen[1], "green", lw=1)
             print("Circle plotted: TRUE")
@@ -108,12 +109,12 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
             circ = True
     
     #plot the quadratic
-    if (quad_near_origin([a,b,c], tolerance) and minsector(points) < road and 
+    '''if (quad_near_origin([a,b,c], tolerance) and minsector(points) < road and 
         stayswithin(a,b,c,radii[-1])):
         plot_quadratic(a, b, c,clip)
         print("Quadratic plotted: TRUE")
         print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
-        q = True
+        q = True'''
     
     #plot points
     if q or circ:
@@ -241,15 +242,42 @@ def minsector(points):
     s.append(sector(npoints))
     return sorted(s)[0]
 
+def testdata(sets):
+    import urllib.request
+    with urllib.request.urlopen('https://gist.githubusercontent.com/StewMH/9f75f8c2915e33b4248ed994173ebc53/raw/03a4f4221a424167beb824ad902768c900a08c50/event') as response:
+        code = response.read().decode().split("\n")[1:]
+    layers = {}
+    for i in range(2,15):
+        layers[i] = []
+    for line in code:
+        try:
+            l = line.split(",")
+            x, y = float(l[1]), float(l[2])
+            layer = int(l[5])
+            point = (x,y)
+            layers[layer].append(point)
+        except:
+            continue
+    combos = []
+    points = []
+    for i in range(2, 15):
+        points += layers[i]
+    for i in range(sets):
+        #select three random points
+        combo = [points[randint(0,len(points)-1)] for j in range(3)]
+        combos.append(combo)
+    return combos
+
 if __name__ == "__main__":
     print("="*40)
-    radii = (3, 7, 11)
+    radii = (3, 100, 1000)
     tolerance = 1
     road = 70
     acc = 2 #accuracy of output
-    num_sets = 6
+    num_sets = 10000
     plot_setup(radii, tolerance)
-    combos = combinations(gen_lots(radii, num_sets))
+    #combos = combinations(gen_lots(radii, num_sets))
+    combos = testdata(num_sets)
     circles=quadratics=[] #empty sets for reasonable paths
     for combo in combos:
         c, q = plot(combo, acc, tolerance,road,radii[-1])
