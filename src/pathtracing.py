@@ -223,13 +223,10 @@ def plot_setup(radii, tolerance):
     return
 
 def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for rounding output
-    cen, r = circle(points)
-    a, b, c = quadratic(points)
-    
-    road = road #maximum sector size between points
-    
     circ=q= False
+    
     #plot circle and center
+    cen, r = circle(points)
     if (r != "N/A"):
         if (circle_near_origin(r, cen, tolerance) and minsector(points) < road and
            r > 1000):
@@ -242,12 +239,15 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
             circ = True
     
     #plot the quadratic
-    '''if a != 0 and (quad_near_origin([a,b,c], tolerance) and minsector(points) < road and 
+    '''
+    a, b, c = quadratic(points)
+    if a != 0 and (quad_near_origin([a,b,c], tolerance) and minsector(points) < road and 
         stayswithin(a,b,c,radii[-1])):
         plot_quadratic(a, b, c,clip)
         print("Quadratic plotted: TRUE")
         print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
-        q = True'''
+        q = True
+    '''
     
     #plot points
     if q or circ:
