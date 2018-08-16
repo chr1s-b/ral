@@ -283,16 +283,7 @@ def realdataxy(sets):
         combos.append(combo)
     return combos
 
-if __name__ == "__main__":
-    print("="*40)
-    radii = (100, 500, 1000)
-    tolerance = 1
-    road = 70
-    acc = 2 #accuracy of output
-    num_sets = 100000
-    plot_setup(radii, tolerance)
-    #combos = combinations(gen_lots(radii, num_sets))
-    combos = realdataxy(num_sets)
+def xyplot(combos, acc, tolerance, road, radii):
     circles=quadratics=[] #empty sets for reasonable paths
     for combo in combos:
         c, q = plot(combo, acc, tolerance,road,radii[-1])
@@ -302,12 +293,27 @@ if __name__ == "__main__":
         if c: circles.append(c) #good circle combo
         if q: quadratics.append(q) #good quadratic combo
     print("Tolerance: {}".format(tolerance))
+    return
+
+if __name__ == "__main__":
+    print("="*40)
+    radii = (100, 500, 1000)
+    tolerance = 1
+    road = 70
+    acc = 2 #accuracy of output
+    num_sets = 100000
+    plot_setup(radii, tolerance)
+    #combos = combinations(gen_lots(radii, num_sets))
+    plt.subplot(1,1,1)
+    combos = realdataxy(num_sets)
+    xyplot(combos,acc,tolerance,road,radii)
+    plt.title("XY slice")
     try:
         plt.show() #unindented to show all plots on one graph
     except:
         print("[WARN] Failed to show plot in a window. Attempting to save plot as PNG.")
         try:
-            savefig("xy.png")
+            savefig("output.png")
             print("Saved as png")
         except Exception as e:
             print("Failed to save figure")
