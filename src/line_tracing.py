@@ -6,8 +6,11 @@ from math import sin, acos, pi, sqrt, atan, degrees
 import urllib.request
 
 def realdata_xyz(sets):
-    with urllib.request.urlopen('https://gist.githubusercontent.com/StewMH/9f75f8c2915e33b4248ed994173ebc53/raw/03a4f4221a424167beb824ad902768c900a08c50/event') as response:
-        code = response.read().decode().split("\n")[1:]
+    #with urllib.request.urlopen('https://gist.githubusercontent.com/StewMH/9f75f8c2915e33b4248ed994173ebc53/raw/03a4f4221a424167beb824ad902768c900a08c50/event') as response:
+    #    code = response.read().decode().split("\n")[1:]
+    print("Reading from local file")
+    with open("data.csv",'r') as file:
+        code = file.readlines()[1:]
     layers = {}
     for i in range(2,15):
         layers[i] = []
@@ -99,12 +102,18 @@ def rtz_to_xy(rtz):
         xy.append(new_trio)
     return xy
     
-def checkroads(combos, road):
-    good = []
-    for combo in combos:
-        if minsector(combo) < road:
-            good.append(combo)
-    return good
+def checkroads(xyz, xy, mc, road):
+    new_xy = []; new_xyz = []; new_mc = []
+    for points, combo, mc in zip(xyz, xy, mc):
+        m, c = mc
+        x_int = -c/m
+        if abs(x_int) <= 3000:
+            combo_centered = [(x-x_int,y-c) for x,y in combo]
+            if minsector(combo_centered) < road:
+                new_xy.append(combo)
+                new_xyz.append(points)
+                new_mc.append(mc)
+    return new_xyz, new_xy, new_mc
 
 def plot(points, lines):
     for trio, line in zip(points,lines):
@@ -138,22 +147,26 @@ def linesof(xy):
         lines.append((m,c))
     return lines
 
-def side_view(xyz):
+def sidecheck(xyz, road):
     rtz = transform_data(xyz)
     xy = rtz_to_xy(rtz)
-    xy = checkroads(xy, 10)
-    #convert to a root along y=0,x=0 and return angle of line - these are best fits
     mc = linesof(xy)
+    xyz, xy, mc = checkroads(xyz, xy, mc, road)    
+    return xyz, xy, mc
+
+def side_view(xy, mc):
+    #convert to a root along y=0,x=0 and return angle of line - these are best fits
     #setup plot
     plt.title("Side view")
     #limit the plot
     plt.xlim(-3000, 3000)
-    plt.ylim(-3000, 3000)
+    plt.ylim(-1000, 1000)
     plt.autoscale(False)
     plot(xy, mc)
 
 if __name__ == "__main__":
-    data = realdata_xyz(1000000)
+    data = realdata_xyz(100000)
+    xyz, xy, mc = sidecheck(data, 1)
     plt.subplot(1,1,1)
-    side_view(data)
+    side_view(xy, mc)
     plt.show()

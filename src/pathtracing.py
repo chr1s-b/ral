@@ -224,20 +224,10 @@ def plot_setup(radii, tolerance):
     return
 
 def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for rounding output
-    circ=q= False
-    
     #plot circle and center
     cen, r = circle(points)
-    if (r != "N/A"):
-        if (circle_near_origin(r, cen, tolerance) and minsector(points) < road and
-           r > 1000):
-            #plt.plot([cen[0]], [cen[1]], 'ro', color="green")
-            color = hsv_to_rgb([1-(((r-1000)/30000.)%1), 1, 1])
-            plot_circle(r, cen[0], cen[1], color, lw=1, alpha=0.7)
-            print("Circle plotted: TRUE")
-            print("Center: ({},{})".format(round(cen[0],acc),round(cen[1],acc)))
-            print("Radius: "+str(round(r,acc)))
-            circ = True
+    color = hsv_to_rgb([1-(((r-1000)/30000.)%1), 1, 1])
+    plot_circle(r, cen[0], cen[1], color, lw=1, alpha=0.7)
     
     #plot the quadratic
     '''
@@ -247,14 +237,11 @@ def plot(points, acc, tolerance,road,clip): #points and feedback accuracy for ro
         plot_quadratic(a, b, c,clip)
         print("Quadratic plotted: TRUE")
         print("Quadratic: {}x^2+{}x+{}".format(round(a,acc),round(b,acc),round(c,acc)))
-        q = True
     '''
     
     #plot points
-    if q or circ:
-        plt.plot([x for x, y in points],
-                 [y for x, y in points], 'ro', color="blue", markersize=4)
-    return circ, q
+    plt.plot([x for x, y in points],
+             [y for x, y in points], 'ro', color=color, markersize=4)
 
 #Real data retrieval
 
@@ -285,41 +272,41 @@ def realdata_xyz(sets):
         combos.append(combo)
     return combos
 
-def xyplot(combos, acc, tolerance, road, radii):
-    circles=quadratics=[] #empty sets for reasonable paths
+def plot_lines(combos, acc, tolerance, road, radii):
     for combo in combos:
-        combo = [point[:2] for point in combo]
-        c, q = plot(combo, acc, tolerance,road,radii[-1])
-        if c or q: 
-            print("Points: "+str([(round(p[0], acc), round(p[1],acc)) for p in combo]))
-            print("="*50)
-        if c: circles.append(c) #good circle combo
-        if q: quadratics.append(q) #good quadratic combo
-    print("Tolerance: {}".format(tolerance))
+        xy = [point[:2] for point in combo]
+        plot(xy, acc, tolerance,road,radii[-1])
     return
 
-def front_view(combos):
-    print("="*40)
-    radii = (100, 500, 1000)
-    tolerance = 1
-    road = 70
-    acc = 2 #accuracy of output
-    plot_setup(radii, tolerance)
-    #combos = combinations(gen_lots(radii, num_sets))
-    xyplot(combos,acc,tolerance,road,radii)
+def front_check(combos, config):
+    validxyz = []
+    for combo in combos:
+        xy = [point[:2] for point in combo]
+        #valid circle?
+        cen, r = circle(xy)
+        if (r != "N/A"):
+            if (circle_near_origin(r, cen, config["tolerance"]) and
+                     minsector(xy) < config["road"] and r >= config["min radius"]):
+                validxyz.append(combo)
+    return validxyz
+
+def front_view(combos, config):
+    plot_setup(config["radii"], config["tolerance"])
+    plot_lines(combos,config["acc"], config["tolerance"], config["road"], config["radii"])
     plt.title("XY slice")
 
 if __name__ == "__main__":
-    num_sets = 10000
-    front_view(realdata_xyz(num_sets))
-    try:
-        plt.show() #unindented to show all plots on one graph
-    except:
-        print("[WARN] Failed to show plot in a window. Attempting to save plot as PNG.")
-        try:
-            savefig("output.png")
-            print("Saved as png")
-        except Exception as e:
-            print("Failed to save figure")
-            raise(e)
+    # config variables
+    config = {"radii": (100, 500, 1000),
+              "tolerance": 1,
+              "road": 70,
+              "acc": 2,
+              "point sets": 1000000,
+              "min radius": 1000}
+    
+    xyz = realdata_xyz(config["point sets"])
+    xyz = front_check(xyz, config)
+    front_view(xyz, config)
+    plt.show() #unindented to show all plots on one graph
+ 
             
